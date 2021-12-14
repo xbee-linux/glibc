@@ -1,0 +1,54 @@
+schema-version: 1.0
+
+type: builder
+
+
+const:
+  srcDir: /usr/src
+  exportDir: /opt/glibc
+
+
+var:
+  version: 2.34
+
+dependencies:
+  - https://github.com/xbee-linux/gawk.git
+  - https://github.com/xbee-linux/bison.git
+  - https://github.com/xbee-linux/python.git
+  - https://github.com/xbee-linux/linux-headers.git
+
+provision:
+  - url:
+      from: https://ftp.gnu.org/gnu/glibc/glibc-{% version %}.tar.xz
+      todir: "{% srcDir %}"
+  - url:
+      from: https://www.linuxfromscratch.org/patches/lfs/11.0/glibc-{% version %}-fhs-1.patch
+      todir: "{% srcDir %}"
+      unpack: false
+  - folder: "{% srcDir %}/glibc-{% version %}/build"
+  - shell:
+      cmd: "{{ .templates }}/patch.sh"
+      directory: "{% srcDir %}/glibc-{% version %}"
+
+build:
+  - shell:
+      cmds:
+        - ../configure --prefix=/usr
+             --disable-werror
+             --enable-kernel=3.2
+             --enable-stack-protector=strong
+             --with-headers=/usr/include
+             libc_cv_slibdir=/usr/lib
+        - make -j12
+#       - make check
+#       - touch /etc/ld.so.conf
+        - sed '/test-installation/s@$(PERL)@echo not running@' -i ../Makefile
+        - make install DESTDIR={% exportDir %}
+        - sed '/RTLDLIST=/s@/opt/glibc@@g' -i {% exportDir %}/usr/bin/ldd
+        - cp -v ../nscd/nscd.conf {% exportDir %}/etc/nscd.conf
+        - mkdir -pv {% exportDir %}/var/cache/nscd
+      directory: "{% srcDir %}/glibc-{% version %}/build"
+  - shell:
+      cmd: "{{ .templates }}/locales.sh"
+      directory: "{% srcDir %}/glibc-{% version %}/build"
+  - export: "{% exportDir %}"
