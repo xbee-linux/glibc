@@ -10,7 +10,7 @@ in:
 dependencies:
   - gawk
   - bison
-  - python
+  - python3
   - linux-headers
   - m4
 
