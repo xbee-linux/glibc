@@ -4,7 +4,7 @@ type: builder
 
 description: |
 
-in:
+var:
   version: 2.34
 
 dependencies:
@@ -16,19 +16,19 @@ dependencies:
 
 provision:
   - url:
-      from: https://ftp.gnu.org/gnu/glibc/glibc-{% version %}.tar.xz
-      todir: "{% xbeeSrc %}"
+      from: https://ftp.gnu.org/gnu/glibc/glibc-{{ .version }}.tar.xz
+      todir: "{{ .xbee.src }}"
   - url:
-      from: https://www.linuxfromscratch.org/patches/lfs/11.0/glibc-{% version %}-fhs-1.patch
-      todir: "{% xbeeSrc %}"
+      from: https://www.linuxfromscratch.org/patches/lfs/11.0/glibc-{{ .version }}-fhs-1.patch
+      todir: "{{ .xbee.src }}"
       unpack: false
   - folder:
       paths:
-        - "{% xbeeSrc %}/glibc-{% version %}/build"
-        - "{% xbeeOut %}/var/cache/nscd"
+        - "{{ .xbee.src }}/glibc-{{ .version }}/build"
+        - "{{ .xbee.out }}/var/cache/nscd"
   - shell:
-      cmd: "{{ .templates }}/patch.sh"
-      directory: "{% xbeeSrc %}/glibc-{% version %}"
+      cmd: "{{ .xbee.templates }}/patch.sh"
+      directory: "{{ .xbee.src }}/glibc-{{ .version }}"
 
 build:
   - shell:
@@ -38,10 +38,10 @@ build:
 #       - make check
 #       - touch /etc/ld.so.conf
         - sed '/test-installation/s@$(PERL)@echo not running@' -i ../Makefile
-        - make install DESTDIR={% xbeeOut %}
-        - sed '/RTLDLIST=/s@/opt/glibc@@g' -i {% xbeeOut %}/usr/bin/ldd
-        - cp -v ../nscd/nscd.conf {% xbeeOut %}/etc/nscd.conf
-      directory: "{% xbeeSrc %}/glibc-{% version %}/build"
+        - make install DESTDIR={{ .xbee.out }}
+        - sed '/RTLDLIST=/s@/opt/glibc@@g' -i {{ .xbee.out }}/usr/bin/ldd
+        - cp -v ../nscd/nscd.conf {{ .xbee.out }}/etc/nscd.conf
+      directory: "{{ .xbee.src }}/glibc-{{ .version }}/build"
   - shell:
-      cmd: "{{ .templates }}/locales.sh"
-      directory: "{% xbeeSrc %}/glibc-{% version %}/build"
+      cmd: "{{ .xbee.templates }}/locales.sh"
+      directory: "{{ .xbee.src }}/glibc-{{ .version }}/build"
